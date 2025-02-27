@@ -1,0 +1,22 @@
+# Python bytecode files
+*.pyc
+*.pyo
+__pycache__/
+
+# Virtual Environment
+virt/
+env/
+
+# Django migrations
+*/migrations/*
+
+# Database files
+*.sqlite3
+
+# Django secret key
+*.env
+
+# IDE config files
+.vscode/
+.idea/
+
