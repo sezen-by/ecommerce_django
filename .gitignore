@@ -5,7 +5,6 @@ __pycache__/
 
 # Virtual Environment
 virt/
-env/
 
 # Django migrations
 */migrations/*
