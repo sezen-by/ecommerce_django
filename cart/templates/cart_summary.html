@@ -57,7 +57,7 @@
                   
             {% for key, value in quantities.items %}
                 {% if key == product.id|slugify %}
-            <option selected>{{ value.quantity }}</option>
+                <option value="{{ value.quantity }}" selected>{{ value.quantity }}</option>                
                 {% endif %}
             {% endfor %}
                            
@@ -73,7 +73,7 @@
             <br/><br/>
         <a href="{% url 'home'%}" class="btn btn-secondary">Home</a>
         <button type="button" data-index="{{product.id}}" class="btn btn-secondary update-cart">Update</button>
-        
+        <button type="button" data-index="{{product.id}}" class="btn btn-danger delete-product">Remove</button>
     </center>
       </div>
     </div>
@@ -83,6 +83,8 @@
 
 
         	{% endfor %}
+          <strong>Total: ${{ totals }} </strong>
+          <br/><br/>
         	{% else %}
         	There's Nothing In Your Cart...
         	<br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/>
@@ -92,42 +94,71 @@
 
 
 
-<script>
-// Update Cart
-$(document).on('click', '.update-cart', function(e){
-    e.preventDefault();
-    // grab the product id
-    var productid = $(this).data('index');
+      <script>
+        // Update Cart
+        $(document).on('click', '.update-cart', function(e){
+            e.preventDefault();
+            
+            // Grab the product id
+            var productid = $(this).data('index');
+            var productqty = $('#select' + productid).val();  // Use val() to get the selected quantity
+        
+            $.ajax({
+                type: 'POST',
+                url: '{% url "cart_update" %}',
+                data: {
+                    product_id: productid,
+                    product_qty: productqty,  // Sending the selected quantity
+                    csrfmiddlewaretoken: '{{ csrf_token }}',
+                    action: 'post'
+                },
+                success: function(json){
+                    // You can update the cart quantity dynamically
+                    $('#cart_quantity').text(json.qty); // Update cart quantity on the page
+                    // Optionally, you can update the product quantity in the UI
+                    $('#select' + productid).val(productqty);
+                    alert('Cart updated successfully!');
+                },
+                error: function(xhr, errmsg, err){
+                    console.log('Error:', errmsg);
+                    alert('There was an error updating the cart. Please try again.');
+                }
+            });
+        });
 
-    $.ajax({
-    type: 'POST',
-    url: '{% url 'cart_update' %}',
-    data: {
-      product_id: $(this).data('index'),
-      product_qty: $('#select' + productid + ' option:selected').text(),
-      csrfmiddlewaretoken: '{{ csrf_token }}',
-      action: 'post'
-    },
-    success: function(json){
-        //console.log(json)
-        //document.getElementById("cart_quantity").textContent = json.qty
-        location.reload();
-    },
 
-    error: function(xhr, errmsg, err){
+        // Delete Item From Cart
+$(document).on('click', '.delete-product', function(e){
+  e.preventDefault();
+  // grab the product id
+  //var productid = $(this).data('index');
 
-    }
+  $.ajax({
+  type: 'POST',
+  url: '{% url 'cart_delete' %}',
+  data: {
+    product_id: $(this).data('index'),
+    csrfmiddlewaretoken: '{{ csrf_token }}',
+    action: 'post'
+  },
+  success: function(json){
+      //console.log(json)
+      //document.getElementById("cart_quantity").textContent = json.qty
+      location.reload();
+  },
+
+  error: function(xhr, errmsg, err){
+
+  }
 
 
-    });
+  });
 
 })
 
 
-
-
-
-</script>
+        </script>
+        
 
 
 {% endblock %}

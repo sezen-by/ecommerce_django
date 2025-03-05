@@ -5,6 +5,15 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 
 
+def update_user(request):
+	return render(request, 'update_user.html', {})
+
+
+def category_summary(request):
+      categories = Category.objects.all() 
+      return render(request, 'category_summary.html', {"categories": categories})
+
+
 def category(request, foo):
 	# Replace Hyphens with Spaces
 	foo = foo.replace('-', ' ')
@@ -18,8 +27,6 @@ def category(request, foo):
 	except:
 		messages.success(request, ("That Category Doesn't Exist..."))
 		return redirect('home')
-
-
 
 
 def product(request,pk):
