@@ -1,7 +1,8 @@
 from django.shortcuts import render, redirect
-
-from  cart.cart import Cart
+from cart.cart import Cart
 from .forms import SignUpForm, UpdateUserForm, ChangePasswordForm, UserInfoForm
+from payment.forms import ShippingForm
+from payment.models import ShippingAddress
 from .models import Product, Category, Profile
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
@@ -30,7 +31,8 @@ def update_info(request):
     if request.user.is_authenticated:
         # Get Current User Profile (Avoid DoesNotExist error)
         current_user = Profile.objects.filter(user__id=request.user.id).first()
-
+        shipping_user = ShippingAddress.objects.filter(user__id=request.user.id).first()
+        print(shipping_user)
         # Eğer kullanıcıya ait profil yoksa, yeni profil oluştur
         if not current_user:
             messages.error(request, "Profile not found! Please create one first.")
@@ -38,17 +40,19 @@ def update_info(request):
 
         # Get original User Form
         form = UserInfoForm(request.POST or None, instance=current_user)
+        shipping_form = ShippingForm(request.POST or None, instance=shipping_user)
 
-        if form.is_valid():
-            # Save original form
+        if form.is_valid() and shipping_form.is_valid():
             form.save()
+            shipping_form.save()
             messages.success(request, "Your Info Has Been Updated!!")
             return redirect('home')
 
-        return render(request, "update_info.html", {'form': form})
+        return render(request, "update_info.html", {'form': form, 'shipping_form': shipping_form})
     else:
         messages.error(request, "You Must Be Logged In To Access That Page!!")
         return redirect('home')
+
 
 
 
@@ -147,7 +151,11 @@ def login_user(request):
 				cart = Cart(request)
 				# Loop thru the cart and add the items from the database
 				for key, value in converted_cart.items():
-					cart.db_add(product=key, quantity=value["quantity"])
+					if isinstance(value, dict) and "quantity" in value:
+						cart.db_add(product=key, quantity=value["quantity"])
+					else:
+						print(f"⚠️ Hatalı veri formatı: {key} -> {value}")
+
 
 
 			messages.success(request, ("You Have Been Logged In!"))
